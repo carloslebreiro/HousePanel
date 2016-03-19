@@ -1,0 +1,102 @@
+* {
+font-family: Arial,Helvetica;
+}
+.bord {
+border: 2px solid #0d4170;
+}
+
+h1, h2, h3 {
+font-size: 30pt;
+color: #003366;
+}
+h2 {
+font-size: 24pt;
+margin: 0px;
+}
+h3 {
+font-size: 18pt;
+}
+p {
+font-size: 14pt;
+}
+
+.info {
+font-size: 12pt;
+}
+
+.tiny {
+  font-size: 10pt;
+  font-style: italic;
+  color: #ff3333;
+  margin-left: 4px;
+}
+
+.cvv2 {
+  font-size: 8pt;
+  font-style: italic;
+  color: #cccccc;
+  margin-left: 4px; margin-top: -16px;
+}
+
+.reddot, .greendot {
+  font-size: 12pt;
+  color: #cc3333;
+  background-color: #5a4d04;
+  margin-left: 2px; margin-right: 2px;
+  padding: 4px;
+  width: 50px;
+}
+
+.greendot {
+  color: #33cc33;
+}
+
+.upgradetext {
+  background-color: white;
+  color: black; font-size: 10pt;
+}
+
+.debug {
+  background-color: red; color: white;
+  font-size: 12pt; margin: 8px;
+  border: 2px solid #0066cc;
+}
+
+td.shaded {
+  background-color: #cccccc;
+  color: black; font-size: 11pt;
+}
+
+li {
+padding-top: 5px;
+padding-bottom: 5px;
+padding-right: 70px;
+margin-left: 30px;
+}
+
+.paybutton, .authbutton {
+	color: black; font-size: 14pt;
+	font-weight: bold;
+	width: 150px; cursor: pointer;
+}
+
+.tinybutton {
+	width: 100px; margin: 2px; padding: 1px; font-weight: bold; font-size: 80%;
+	cursor: pointer; margin-left: 5px; margin-top: 5px;
+}
+
+.hidden {
+	display: none;
+}
+
+.shown {
+	display: inline;
+}
+
+.endpts {
+  font-size: 12pt;
+  color: #006633;
+  margin-left: 16px; margin-top: 4px; margin-top: 4px;
+  border-top: 2px solid #0066cc;
+  border-bottom: 2px solid #0066cc;
+}
