@@ -33,6 +33,9 @@ preferences {
     section("Switches...") {
         input "myswitches", "capability.switch", multiple: true, required: false
     }
+    section("Bulbs...") {
+        input "mybulbs", "capability.bulb", multiple: true, required: false
+    }
     section("Dimmer switches...") {
         input "mydimmers", "capability.switchLevel", multiple: true, required: false
     }
@@ -60,6 +63,9 @@ preferences {
     section ("Cameras...") {
     	input "mycameras", "capability.imageCapture", multiple: true, required: false
     }
+    section ("Presences...") {
+    	input "mypresences", "capability.presenceSensor", multiple: true, required: false
+    }
     section ("Water Sensors...") {
     	input "mywaters", "capability.waterSensor", multiple: true, required: false
     }
@@ -72,6 +78,12 @@ mappings {
   path("/switches") {
     action: [
       POST: "getSwitches"
+    ]
+  }
+  
+  path("/bulbs") {
+    action: [
+      POST: "getBulbs"
     ]
   }
   
@@ -120,6 +132,12 @@ mappings {
   path("/cameras") {
     action: [
       POST: "getCameras"
+    ]
+  }
+    
+  path("/presences") {
+    action: [
+      POST: "getPresences"
     ]
   }
     
@@ -189,6 +207,12 @@ def getSwitch(swid, item=null) {
     return resp
 }
 
+def getBulb(swid, item=null) {
+    item = item ? item : mybulbs.find {it.id == swid }
+    def resp = item ? [switch: item.currentValue("bulb")] : false
+    return resp
+}
+
 def getMomentary(swid, item=null) {
 	def resp = false
     item = item ? item : mymomentaries.find {it.id == swid }
@@ -251,6 +275,16 @@ def getThermostat(swid, item=null) {
 def getCamera(swid, item=null) {
     item = item ? item : mycameras.find {it.id == swid }
     def resp = item ? [image: item.currentValue("image")] : false
+    return resp
+}
+
+// use absent instead of "not present" for absence state
+def getPresence(swid, item=null) {
+    item = item ? item : mypresences.find {it.id == swid }
+    def resp = false
+    if (item) {
+  		resp = item.currentValue("presence")=="present" ? "present" : "absent";
+    }
     return resp
 }
 
@@ -322,6 +356,16 @@ def getSwitches() {
     myswitches?.each {
         def val = getSwitch(it.id, it)
         resp << [name: it.displayName, id: it.id, value: val, type: "switch"]
+    }
+    return resp
+}
+
+def getBulbs() {
+    def resp = []
+    log.debug "Number of bulbs = " + mybulbs?.size() ?: 0
+    mybulbs?.each {
+        def val = getBulb(it.id, it)
+        resp << [name: it.displayName, id: it.id, value: val, type: "bulb"]
     }
     return resp
 }
@@ -406,6 +450,16 @@ def getCameras() {
         def val = getCamera(it.id, it)
         it.take();
         resp << [name: it.displayName, id: it.id, value: val, type: "image"]
+    }
+    return resp
+}
+
+def getPresences() {
+    def resp = []
+    log.debug "Number of presence sensors = " + mypresences?.size() ?: 0
+    mypresences?.each {
+        def val = getPresence(it.id, it)
+        resp << [name: it.displayName, id: it.id, value: val, type: "presence"]
     }
     return resp
 }
@@ -502,6 +556,10 @@ def doAction() {
       	 cmdresult = setSwitch(swid, cmd, swattr)
          break
          
+      case "bulb" :
+      	 cmdresult = setBulb(swid, cmd, swattr)
+         break
+         
       case "switchlevel" :
          cmdresult = setDimmer(swid, cmd, swattr)
          break
@@ -548,6 +606,10 @@ def doQuery() {
       	cmdresult = getSwitch(swid)
         break
          
+    case "bulb" :
+      	cmdresult = getBulb(swid)
+        break
+         
     case "switchlevel" :
         cmdresult = getDimmer(swid)
         break
@@ -578,6 +640,10 @@ def doQuery() {
          
     case "image" :
         cmdresult = getCamera(swid)
+        break
+        
+    case "presence" :
+    	cmdresult = getPresence(swid)
         break
          
     case "water" :
@@ -682,6 +748,21 @@ def setSwitch(swid, cmd, swattr) {
         item.currentSwitch=="off" ? item.on() : item.off()
         resp = [switch: newsw]
         // resp = [name: item.displayName, value: newsw, id: swid, type: swtype]
+    }
+    return resp
+    
+}
+
+// changed these to just return values of entire tile
+def setBulb(swid, cmd, swattr) {
+    def resp = false
+    def newsw = cmd
+    def item  = mybulbs.find {it.id == swid }
+    
+    if (item) {
+        newsw = item.currentBulb=="off" ? "on" : "off"
+        item.currentBulb=="off" ? item.on() : item.off()
+        resp = [bulb: newsw]
     }
     return resp
     
