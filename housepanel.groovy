@@ -689,12 +689,12 @@ def setSwitch(swid, cmd, swattr) {
 
 def setMode(swid, cmd, swattr) {
     def resp
-    def newsw
     def themode = swattr.substring(swattr.lastIndexOf(" ")+1)
+    def newsw = themode
     def allmodes = location.getModes()
     def idx=allmodes.findIndexOf{it == themode}
 
-    if (idx) {
+    if (idx!=null) {
         idx = idx+1
         if (idx == allmodes.size() ) { idx = 0 }
         newsw = allmodes[idx]
@@ -702,6 +702,7 @@ def setMode(swid, cmd, swattr) {
         newsw = allmodes[0]
     }
     
+    log.debug "Mode changed from $themode to $newsw index = $idx "
     location.setMode(newsw);
     resp =  [   name: location.getName(),
                 zipcode: location.getZipCode(),
