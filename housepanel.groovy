@@ -140,6 +140,12 @@ mappings {
       POST: "getWeathers"
     ]
   }
+    
+  path("/modes") {
+    action: [
+      POST: "getModes"
+    ]
+  }
   
   path("/doaction") {
      action: [
@@ -285,6 +291,28 @@ def getOther(swid, item=null) {
                     }
                 }
             }
+    return resp
+}
+
+def getMode(swid=0, item=null) {
+    def resp = [:]
+    resp =  [   name: location.getName(),
+                zipcode: location.getZipCode(),
+                themode: location.getMode()
+            ];
+    return resp
+}
+
+// this returns just a single active mode, not the list of available modes
+// this is done so we can treat this like any other set of tiles
+def getModes() {
+    def resp = []
+    log.debug "Getting the mode tile"
+    def val = getMode()
+    resp << [name: "Mode 1x1", id: "mode1x1", value: val, type: "mode"]
+    resp << [name: "Mode 1x2", id: "mode1x2", value: val, type: "mode"]
+    resp << [name: "Mode 2x1", id: "mode2x1", value: val, type: "mode"]
+    resp << [name: "Mode 2x2", id: "mode2x2", value: val, type: "mode"]
     return resp
 }
 
@@ -497,6 +525,10 @@ def doAction() {
       case "image" :
       	 cmdresult = setCamera(swid, cmd, swattr)
          break
+
+      case "mode" :
+         cmdresult = setMode(swid, cmd, swattr)
+         break
       
     }
    
@@ -559,6 +591,11 @@ def doQuery() {
     case "other" :
     	cmdresult = getOther(swid)
         break
+
+    case "mode" :
+        cmdresult = getMode(swid)
+        break
+        
     }
    
     // log.debug "getTile: type = $swtype id = $swid cmdresult = $cmdresult"
@@ -648,6 +685,30 @@ def setSwitch(swid, cmd, swattr) {
     }
     return resp
     
+}
+
+def setMode(swid, cmd, swattr) {
+    def resp
+    def newsw
+    def themode = swattr.substring(swattr.lastIndexOf(" ")+1)
+    def allmodes = location.getModes()
+    def idx=allmodes.findIndexOf{it == themode}
+
+    if (idx) {
+        idx = idx+1
+        if (idx == allmodes.size() ) { idx = 0 }
+        newsw = allmodes[idx]
+    } else {
+        newsw = allmodes[0]
+    }
+    
+    location.setMode(newsw);
+    resp =  [   name: location.getName(),
+                zipcode: location.getZipCode(),
+                themode: newsw
+            ];
+    
+    return resp
 }
 
 def setDimmer(swid, cmd, swattr) {
