@@ -60,9 +60,6 @@ preferences {
     section ("Weather...") {
     	input "myweathers", "device.smartweatherStationTile", title: "Weather tile", multiple: true, required: false
     }
-    section ("Cameras...") {
-    	input "mycameras", "capability.imageCapture", multiple: true, required: false
-    }
     section ("Presences...") {
     	input "mypresences", "capability.presenceSensor", multiple: true, required: false
     }
@@ -126,12 +123,6 @@ mappings {
   path("/thermostats") {
     action: [
       POST: "getThermostats"
-    ]
-  }
-    
-  path("/cameras") {
-    action: [
-      POST: "getCameras"
     ]
   }
     
@@ -269,12 +260,6 @@ def getThermostat(swid, item=null) {
                               thermostate: item.currentValue("thermostatOperatingState")
                          ] : false
     // log.debug "Thermostat response = ${resp}"
-    return resp
-}
-
-def getCamera(swid, item=null) {
-    item = item ? item : mycameras.find {it.id == swid }
-    def resp = item ? [image: item.currentValue("image")] : false
     return resp
 }
 
@@ -443,17 +428,6 @@ def getThermostats() {
     return resp
 }
 
-def getCameras() {
-    def resp = []
-    log.debug "Number of cameras = " + mycameras?.size() ?: 0
-    mycameras?.each {
-        def val = getCamera(it.id, it)
-        it.take();
-        resp << [name: it.displayName, id: it.id, value: val, type: "image"]
-    }
-    return resp
-}
-
 def getPresences() {
     def resp = []
     log.debug "Number of presence sensors = " + mypresences?.size() ?: 0
@@ -513,7 +487,7 @@ def getGenerals(mygens, gentype) {
              mymusics?.find {it.id == thatid } ||
              mythermostats?.find {it.id == thatid} ||
              myweathers?.find {it.id == thatid} ||
-             mycameras?.find {it.id == thatid}
+             mypresences?.find {it.id == thatid}
             )
         
         if ( !inlist ) {
@@ -579,10 +553,6 @@ def doAction() {
       case "music" :
          cmdresult = setMusic(swid, cmd, swattr)
          break
-         
-      case "image" :
-      	 cmdresult = setCamera(swid, cmd, swattr)
-         break
 
       case "mode" :
          cmdresult = setMode(swid, cmd, swattr)
@@ -637,10 +607,6 @@ def doQuery() {
     case "music" :
         cmdresult = getMusic(swid)
         break
-         
-    case "image" :
-        cmdresult = getCamera(swid)
-        break
         
     case "presence" :
     	cmdresult = getPresence(swid)
@@ -666,75 +632,6 @@ def doQuery() {
    
     // log.debug "getTile: type = $swtype id = $swid cmdresult = $cmdresult"
     return cmdresult
-}
-
-def getHistory() {
-    def swtype = params.swtype
-    def swid = params.swid
-    def actionitems = myswitches
-    def hstatus = "switch"
-    
-    // log.debug "called getHistory with thing of type = " + swtype + " id = " + swid
-    
-    switch (swtype) {
-      case "switch" :
-         actionitems = myswitches
-         hstatus = "switch"
-         break
-      case "switchlevel" :
-         actionitems = mydimmers
-         hstatus = "level"
-         break
-      case "momentary" :
-         actionitems = mymomentaries
-         hstatus = "switch"
-         break
-      case "motion" :
-         actionitems = mysensors
-         hstatus = "motion"
-         break
-      case "contact" :
-         actionitems = mydoors
-         hstatus = "contact"
-         break
-      case "music" :
-         actionitems = mymusics
-         hstatus = "status"
-         break
-      case "lock" :
-         actionitems = mylocks
-         hstatus = "lock"
-         break
-      case "thermostat" :
-      	 actionitems = mythermostats
-         hstatus = "temperature"
-        break
-      case "image" :
-      	 actionitems = mycameras
-         hstatus = "image"
-         break
-      case "water" :
-      	 actionitems = mywaters
-         hstatus = "water"
-         break
-        
-      default :
-         actionitems = null
-         break
-    }
-    
-    def resp = []
-    def item  = actionitems?.find {it.id == swid }
-    if (item) {
-        def startDate = new Date() - 5
-        def endDate = new Date()
-        resp = item.statesBetween(swtype, startDate, endDate, [max: 10])
-        // log.debug "history found for thing = " + item.displayName + " items= " + theHistory.size()
-    } else {
-        httpError(400, "History not available for thing with id= $swid and type= $swtype");
-    }
-
-    return resp
 }
 
 // changed these to just return values of entire tile
@@ -1050,18 +947,4 @@ def setMusic(swid, cmd, swattr) {
          // resp = [name: item.displayName, value: newsw, id: swid, type: swtype]
     }
     return resp
-}
-
-def setCamera(swid, cmd, swattr) {
-    def resp = false
- 
-    def item  = mycameras.find {it.id == swid }
-    if (item) {
-          log.debug "takeImage command = $cmd for id = $swid"
-          item.take()
-          resp = [image: item.image]
-          // resp = [name: item.displayName, value: item.image, id: swid, type: swtype]
-    }
-    return resp
-
 }
