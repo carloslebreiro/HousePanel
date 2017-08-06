@@ -155,6 +155,12 @@ mappings {
       POST: "getModes"
     ]
   }
+    
+  path("/pistons") {
+    action: [
+      POST: "getPistons"
+    ]
+  }
   
   path("/doaction") {
      action: [
@@ -178,11 +184,13 @@ mappings {
 
 def installed() {
 	log.debug "Installed with settings: ${settings}"
-    // subscribe(weathers, "device.smartweatherStationTile", getWeatherInfo)
+    // activate connector for webCoRE
+    webCoRE_init()
 }
 
 def updated() {
 	log.debug "Updated with settings: ${settings}"
+    webCoRE_init()
 }
 
 def getWeatherInfo(evt) {
@@ -326,12 +334,30 @@ def getMode(swid=0, item=null) {
 // this is done so we can treat this like any other set of tiles
 def getModes() {
     def resp = []
-    log.debug "Getting the mode tile"
+    // log.debug "Getting the mode tile"
     def val = getMode()
     resp << [name: "Mode 1x1", id: "mode1x1", value: val, type: "mode"]
     resp << [name: "Mode 1x2", id: "mode1x2", value: val, type: "mode"]
     resp << [name: "Mode 2x1", id: "mode2x1", value: val, type: "mode"]
     resp << [name: "Mode 2x2", id: "mode2x2", value: val, type: "mode"]
+    return resp
+}
+
+def getPiston(swid, item=null) {
+    item = item ? item : webCoRE_list().find {it.id == swid}
+    def resp = [webcore: "webCoRE piston", pistonName: item.name]
+    return resp
+}
+
+def getPistons() {
+    def resp = []
+    def plist = webCoRE_list()
+    log.debug "Number of pistons = " + plist?.size() ?: 0
+    plist?.each {
+        def val = getPiston(it.id, it)
+        resp << [name: it.name, id: it.id, value: val, type: "piston"]
+        // log.debug "webCoRE piston retrieved: name = ${it.name} with id = ${it.id} and ${it}"
+    }
     return resp
 }
 
@@ -557,6 +583,13 @@ def doAction() {
       case "mode" :
          cmdresult = setMode(swid, cmd, swattr)
          break
+
+      case "piston" :
+         webCoRE_execute(swid)
+         // set the result to piston information (could be false)
+         cmdresult = getPiston(swid)
+         log.debug "Executed webCoRE piston: $cmdresult"
+         break;
       
     }
    
@@ -948,3 +981,57 @@ def setMusic(swid, cmd, swattr) {
     }
     return resp
 }
+
+/*************************************************************************/
+/* webCoRE Connector v0.2                                                */
+/*************************************************************************/
+/*  Copyright 2016 Adrian Caramaliu <ady624(at)gmail.com>                */
+/*                                                                       */
+/*  This program is free software: you can redistribute it and/or modify */
+/*  it under the terms of the GNU General Public License as published by */
+/*  the Free Software Foundation, either version 3 of the License, or    */
+/*  (at your option) any later version.                                  */
+/*                                                                       */
+/*  This program is distributed in the hope that it will be useful,      */
+/*  but WITHOUT ANY WARRANTY; without even the implied warranty of       */
+/*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the         */
+/*  GNU General Public License for more details.                         */
+/*                                                                       */
+/*  You should have received a copy of the GNU General Public License    */
+/*  along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+/*************************************************************************/
+/*  Initialize the connector in your initialize() method using           */
+/*     webCoRE_init()                                                    */
+/*  Optionally, pass the string name of a method to call when a piston   */
+/*  is executed:                                                         */
+/*     webCoRE_init('pistonExecutedMethod')                              */
+/*************************************************************************/
+/*  List all available pistons by using one of the following:            */
+/*     webCoRE_list() - returns the list of id/name pairs                */
+/*     webCoRE_list('id') - returns the list of piston IDs               */
+/*     webCoRE_list('name') - returns the list of piston names           */
+/*************************************************************************/
+/*  Execute a piston by using the following:                             */
+/*     webCoRE_execute(pistonIdOrName)                                   */
+/*  The execute method accepts either an id or the name of a             */
+/*  piston, previously retrieved by webCoRE_list()                       */
+/*************************************************************************/
+private webCoRE_handle(){return'webCoRE'}
+private webCoRE_init(pistonExecutedCbk)
+{
+    state.webCoRE=(state.webCoRE instanceof Map?state.webCoRE:[:])+(pistonExecutedCbk?[cbk:pistonExecutedCbk]:[:]);
+    subscribe(location,"${webCoRE_handle()}.pistonList",webCoRE_handler);
+    if(pistonExecutedCbk)subscribe(location,"${webCoRE_handle()}.pistonExecuted",webCoRE_handler);webCoRE_poll();
+}
+private webCoRE_poll(){sendLocationEvent([name: webCoRE_handle(),value:'poll',isStateChange:true,displayed:false])}
+public  webCoRE_execute(pistonIdOrName,Map data=[:]){def i=(state.webCoRE?.pistons?:[]).find{(it.name==pistonIdOrName)||(it.id==pistonIdOrName)}?.id;if(i){sendLocationEvent([name:i,value:app.label,isStateChange:true,displayed:false,data:data])}}
+public  webCoRE_list(mode)
+{
+	def p=state.webCoRE?.pistons;
+    if(p)p.collect{
+		mode=='id'?it.id:(mode=='name'?it.name:[id:it.id,name:it.name])
+        // log.debug "Reading piston: ${it}"
+	}
+    return p
+}
+public  webCoRE_handler(evt){switch(evt.value){case 'pistonList':List p=state.webCoRE?.pistons?:[];Map d=evt.jsonData?:[:];if(d.id&&d.pistons&&(d.pistons instanceof List)){p.removeAll{it.iid==d.id};p+=d.pistons.collect{[iid:d.id]+it}.sort{it.name};state.webCoRE = [updated:now(),pistons:p];};break;case 'pistonExecuted':def cbk=state.webCoRE?.cbk;if(cbk&&evt.jsonData)"$cbk"(evt.jsonData);break;}}
