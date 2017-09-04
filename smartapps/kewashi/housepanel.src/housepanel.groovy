@@ -16,6 +16,7 @@
  * but it has morphed into a full blown smart panel web application
  * it displays and enables interaction with switches, dimmers, locks, etc
  * 
+ * Adding a comment to confirm the repository is working correctly
  */
 definition(
     name: "House Panel",
@@ -193,6 +194,14 @@ def updated() {
     webCoRE_init()
 }
 
+def switchHandler(evt) {
+	def item = evt.getDevice()
+    def evalue = evt.value
+    def swid = item.id
+    def swname = item.displayName
+    log.debug "Event received from device = ${swname} value = ${evalue} id = ${swid}"
+}
+
 def getWeatherInfo(evt) {
 	def name = evt.getName()
     def src = evt.getSource()
@@ -364,6 +373,7 @@ def getPistons() {
 def getSwitches() {
     def resp = []
     log.debug "Number of switches = " + myswitches?.size() ?: 0
+    subscribe(myswitches, "switch", switchHandler)
     myswitches?.each {
         def val = getSwitch(it.id, it)
         resp << [name: it.displayName, id: it.id, value: val, type: "switch"]
@@ -373,7 +383,8 @@ def getSwitches() {
 
 def getBulbs() {
     def resp = []
-    log.debug "Number of bulbs = " + mybulbs?.size() ?: 0
+    def n  = mybulbs ? mybulbs.size() : 0
+    log.debug "Number of bulbs = ${n}"
     mybulbs?.each {
         def val = getBulb(it.id, it)
         resp << [name: it.displayName, id: it.id, value: val, type: "bulb"]
@@ -466,7 +477,7 @@ def getPresences() {
 
 def getWaters() {
     def resp = []
-    log.debug "Number of water sensors = " + mywaters?.size() ?: 0
+    log.debug "Number of water sensors = ${mywaters ? mywaters.size() : 0}"
     mywaters?.each {
         def val = getWater(it.id, it)
         resp << [name: it.displayName, id: it.id, value: val, type: "water"]
@@ -486,7 +497,7 @@ def getWeathers() {
         	def attname = att.name
         	def attval = that.currentValue(attname)
             multivalue.put(attname,attval)
-            log.debug "Supported ${that.displayName} Attribute: ${attname} value = ${attval}"
+            // log.debug "Supported ${that.displayName} Attribute: ${attname} value = ${attval}"
         }
         resp << [name: that.displayName, id: that.id, value: multivalue, type: "weather"]
     }
@@ -501,7 +512,7 @@ def getOthers() {
 def getGenerals(mygens, gentype) {
     def resp = []
     def uniquenum = 0
-    log.debug "Number of ${gentype} sensors = " + mygens?.size() ?: 0
+    log.debug "Number of ${gentype} sensors = ${mygens ? mygens.size() : 0}"
     mygens?.each {
         
         def thatid = it.id;
@@ -542,6 +553,24 @@ def getGenerals(mygens, gentype) {
     return resp
 }
 
+def autoType(swid) {
+	def swtype
+    if ( myswitches?.find {it.id == swid } ) { swtype= "switch" }
+    else if ( mymomentaries?.find {it.id == swid } ) { swtype= "momentary" }
+    else if ( mydimmers?.find {it.id == swid } ) { swtype= "switchlevel" }
+    else if ( mybulbs?.find {it.id == swid } ) { swtype= "bulb" }
+    else if ( mylocks?.find {it.id == swid } ) { swtype= "lock" }
+    else if ( mymusics?.find {it.id == swid } ) { swtype= "music" }
+    else if ( mythermostats?.find {it.id == swid} ) { swtype = "thermostat" }
+    else if ( mypresences?.find {it.id == swid } ) { swtype= "presence" }
+    else if ( myweathers?.find {it.id == swid } ) { swtype= "weather" }
+    else if ( mysensors?.find {it.id == swid } ) { swtype= "motion" }
+    else if ( mydoors?.find {it.id == swid } ) { swtype= "contact" }
+    else if ( mywaters?.find {it.id == swid } ) { swtype= "water" }
+    else if ( myothers?.find {it.id == swid } ) { swtype= "other" }
+    else { swtype = "mode" }
+}
+
 def doAction() {
     // returns false if the item is not found
     // otherwise returns a JSON object with the name, value, id, type
@@ -550,7 +579,13 @@ def doAction() {
     def swtype = params.swtype
     def swattr = params.swattr
     def cmdresult = false
-    
+    // sendLocationEvent( [name: "housepanel", value: "touch", isStateChange:true, displayed:true, data: [id: swid, type: swtype, attr: swattr, cmd: cmd] ] )
+
+	// get the type if auto is set
+    if (swtype=="auto" || swtype=="none" || swtype=="") {
+        swtype = autoType(swid)
+    }
+
     switch (swtype) {
       case "switch" :
       	 cmdresult = setSwitch(swid, cmd, swattr)
@@ -603,6 +638,11 @@ def doQuery() {
     def swid = params.swid
     def swtype = params.swtype
     def cmdresult = false
+
+	// get the type if auto is set
+    if (swtype=="auto" || swtype=="none" || swtype=="") {
+        swtype = autoType(swid)
+    }
 
     switch(swtype) {
     case "switch" :
@@ -660,22 +700,25 @@ def doQuery() {
     case "mode" :
         cmdresult = getMode(swid)
         break
-        
+
     }
    
-    // log.debug "getTile: type = $swtype id = $swid cmdresult = $cmdresult"
+    log.debug "getTile: type = $swtype id = $swid cmdresult = $cmdresult"
     return cmdresult
 }
 
 // changed these to just return values of entire tile
 def setSwitch(swid, cmd, swattr) {
     def resp = false
-    def newsw = cmd
+    def newsw
     def item  = myswitches.find {it.id == swid }
+
+    log.debug "switch cmd = $cmd swattr = $swattr"
     
     if (item) {
-        newsw = item.currentSwitch=="off" ? "on" : "off"
-        item.currentSwitch=="off" ? item.on() : item.off()
+        newsw = item.currentSwitch
+        newsw=="off" ? item.on() : item.off()
+        newsw = newsw=="off" ? "on" : "off"
         resp = [switch: newsw]
         // resp = [name: item.displayName, value: newsw, id: swid, type: swtype]
     }
@@ -690,8 +733,8 @@ def setBulb(swid, cmd, swattr) {
     def item  = mybulbs.find {it.id == swid }
     
     if (item) {
-        newsw = item.currentBulb=="off" ? "on" : "off"
-        item.currentBulb=="off" ? item.on() : item.off()
+        if (newsw!="on" && newsw!="off") { newsw = item.currentBulb=="off" ? "on" : "off" }
+        newsw=="on" ? item.on() : item.off()
         resp = [bulb: newsw]
     }
     return resp
@@ -732,7 +775,7 @@ def setDimmer(swid, cmd, swattr) {
          def newonoff = item.currentValue("switch")
          def newsw = item.currentValue("level")   
          
-         log.debug "switchlevel swattr = $swattr"
+         log.debug "switchlevel cmd = $cmd swattr = $swattr"
          switch(swattr) {
          
          case "level-up":
@@ -751,8 +794,8 @@ def setDimmer(swid, cmd, swattr) {
               break
               
          case "level-val":
-              newonoff=="off" ? item.on() : item.off()
               newonoff = newonoff=="off" ? "on" : "off"
+              newonoff=="on" ? item.on() : item.off()
               break
               
          case "switchlevel switch on":
@@ -764,6 +807,15 @@ def setDimmer(swid, cmd, swattr) {
               newonoff = "on"
               item.on()
               break
+              
+         default:
+         	if (cmd=="on" || cmd=="off") {
+                  newonoff = cmd
+            } else {
+                  newonoff = newonoff=="off" ? "on" : "off"
+            }
+            newonoff=="on" ? item.on() : item.off()
+			break               
               
         }
         resp = [switch: newonoff,
