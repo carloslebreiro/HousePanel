@@ -16,7 +16,6 @@
  * but it has morphed into a full blown smart panel web application
  * it displays and enables interaction with switches, dimmers, locks, etc
  * 
- * Adding a comment to confirm the repository is working correctly
  */
 definition(
     name: "House Panel",
@@ -31,41 +30,35 @@ definition(
 
 
 preferences {
-    section("Switches...") {
-        input "myswitches", "capability.switch", multiple: true, required: false
+    section("Lights and Switches...") {
+        input "myswitches", "capability.switch", multiple: true, required: false, title: "Switches"
+        input "mydimmers", "capability.switchLevel", hideWhenEmpty: true, multiple: true, required: false, title: "Dimmers"
+        input "mymomentaries", "capability.momentary", hideWhenEmpty: true, multiple: true, required: false, title: "Momentary Buttons"
+        input "mylights", "capability.light", hideWhenEmpty: true, multiple: true, required: false, title: "Lights"
+        input "mybulbs", "capability.bulb", hideWhenEmpty: true, multiple: true, required: false, title: "Bulbs"
     }
-    section("Bulbs...") {
-        input "mybulbs", "capability.bulb", multiple: true, required: false
+    section ("Motion and Presence") {
+    	input "mysensors", "capability.motionSensor", multiple: true, required: false, title: "Motion"
+    	input "mypresences", "capability.presenceSensor", hideWhenEmpty: true, multiple: true, required: false, title: "Presence"
     }
-    section("Dimmer switches...") {
-        input "mydimmers", "capability.switchLevel", multiple: true, required: false
+    section ("Door and Contact Sensors") {
+    	input "mycontacts", "capability.contactSensor", hideWhenEmpty: true, multiple: true, required: false, title: "Contact Sensors"
+    	input "mydoors", "capability.doorControl", hideWhenEmpty: true, multiple: true, required: false, title: "Doors"
+    	input "mylocks", "capability.lock", hideWhenEmpty: true, multiple: true, required: false, title: "Locks"
     }
-    section ("Motion sensors...") {
-    	input "mysensors", "capability.motionSensor", multiple: true, required: false
+    section ("Music players") {
+    	input "mymusics", "capability.musicPlayer", hideWhenEmpty: true, multiple: true, required: false, title: "Music Players"
     }
-    section ("Contact (door and window) sensors...") {
-    	input "mydoors", "capability.contactSensor", multiple: true, required: false
+    section ("Thermostat & Environment") {
+    	input "mythermostats", "capability.thermostat", hideWhenEmpty: true, multiple: true, required: false, title: "Thermostats"
+    	input "mytemperatures", "capability.temperatureMeasurement", hideWhenEmpty: true, multiple: true, required: false, title: "Temperature Measures"
+    	input "myilluminances", "capability.illuminanceMeasurement", hideWhenEmpty: true, multiple: true, required: false, title: "Illuminances"
+    	input "myweathers", "device.smartweatherStationTile", hideWhenEmpty: true, title: "Weather tile", multiple: false, required: false
     }
-    section ("Momentary buttons...") {
-        input "mymomentaries", "capability.momentary", multiple: true, required: false
-    }
-    section ("Locks...") {
-    	input "mylocks", "capability.lock", multiple: true, required: false
-    }
-    section ("Music players...") {
-    	input "mymusics", "capability.musicPlayer", multiple: true, required: false
-    }
-    section ("Thermostats...") {
-    	input "mythermostats", "capability.thermostat", multiple: true, required: false
-    }
-    section ("Weather...") {
-    	input "myweathers", "device.smartweatherStationTile", title: "Weather tile", multiple: true, required: false
-    }
-    section ("Presences...") {
-    	input "mypresences", "capability.presenceSensor", multiple: true, required: false
-    }
-    section ("Water Sensors...") {
-    	input "mywaters", "capability.waterSensor", multiple: true, required: false
+    section ("Water") {
+    	input "mywaters", "capability.waterSensor", hideWhenEmpty: true, multiple: true, required: false, title: "Water Sensors"
+    	input "mysmokes", "capability.smokeDetector", hideWhenEmpty: true, multiple: true, required: false, title: "Smoke Detectors"
+    	input "myvalves", "capability.valve", hideWhenEmpty: true, multiple: true, required: false, title: "Sprinklers"
     }
     section ("Other Sensors (duplicates ignored)...") {
     	input "myothers", "capability.sensor", multiple: true, required: false
@@ -82,6 +75,12 @@ mappings {
   path("/bulbs") {
     action: [
       POST: "getBulbs"
+    ]
+  }
+  
+  path("/lights") {
+    action: [
+      POST: "getLights"
     ]
   }
   
@@ -132,6 +131,12 @@ mappings {
       POST: "getPresences"
     ]
   }
+  
+  path("/valves") {
+    action: [
+      POST: "getValves"
+    ]
+  }
     
   path("/waters") {
     action: [
@@ -150,7 +155,19 @@ mappings {
       POST: "getWeathers"
     ]
   }
-    
+   
+  path("/doors") {
+    action: [ POST: "getDoors" ]
+  }
+  path("/illuminances") {
+    action: [ POST: "getIlluminances" ]
+  }
+  path("/smokes") {
+    action: [ POST: "getSmokes" ]
+  }
+  path("/temperatures") {
+    action: [ POST: "getTemperatures" ]
+  }
   path("/modes") {
     action: [
       POST: "getModes"
@@ -210,14 +227,21 @@ def getWeatherInfo(evt) {
 }
 
 def getSwitch(swid, item=null) {
-    item = item ? item : myswitches.find {it.id == swid }
-    def resp = item ? [switch: item.currentValue("switch")] : false
-    return resp
+    getThing(myswitches, "switch", swid, item)
+    // item = item ? item : myswitches.find {it.id == swid }
+    // def resp = item ? [switch: item.currentValue("switch")] : false
+    // return resp
 }
 
 def getBulb(swid, item=null) {
     item = item ? item : mybulbs.find {it.id == swid }
-    def resp = item ? [switch: item.currentValue("bulb")] : false
+    def resp = item ? [bulb: item.currentValue("bulb")] : false
+    return resp
+}
+
+def getLight(swid, item=null) {
+    item = item ? item : mylights.find {it.id == swid }
+    def resp = item ? [light: item.currentValue("light")] : false
     return resp
 }
 
@@ -246,7 +270,7 @@ def getSensor(swid, item=null) {
 }
 
 def getContact(swid, item=null) {
-    item = item ? item : mydoors.find {it.id == swid }
+    item = item ? item : mycontacts.find {it.id == swid }
     def resp = item ? [contact: item.currentValue("contact")] : false
     return resp
 }
@@ -283,10 +307,7 @@ def getThermostat(swid, item=null) {
 // use absent instead of "not present" for absence state
 def getPresence(swid, item=null) {
     item = item ? item : mypresences.find {it.id == swid }
-    def resp = false
-    if (item) {
-  		resp = item.currentValue("presence")=="present" ? "present" : "absent";
-    }
+    def resp = item ? [presence : (item.currentValue("presence")=="present") ? "present" : "absent"] : false
     return resp
 }
 
@@ -296,10 +317,34 @@ def getWater(swid, item=null) {
     return resp
 }
 
+def getValve(swid, item=null) {
+    item = item ? item : myvalves.find {it.id == swid }
+    def resp = item ? [valve: item.currentValue("valve")] : false
+    return resp
+}
+def getDoor(swid, item=null) {
+    item = item ? item : mydoors.find {it.id == swid }
+    def resp = item ? [door: item.currentValue("door")] : false
+    return resp
+}
+def getIlluminance(swid, item=null) {
+    item = item ? item : myilluminances.find {it.id == swid }
+    def resp = item ? [illuminance: item.currentValue("illuminance")] : false
+    return resp
+}
+def getSmoke(swid, item=null) {
+    item = item ? item : mysmokes.find {it.id == swid }
+    def resp = item ? [smoke: item.currentValue("smoke"),
+                       carbonMonoxide: item.currentValue("carbonMonoxide")] : false
+    return resp
+}
+def getTemperature(swid, item=null) {
+    getThing(mytemperatures, "temperature", swid, item)
+}
+
 def getWeather(swid, item=null) {
     item = item ? item : myweathers.find {it.id == swid }
     def resp = false
-    
     if (item) {
 		resp = [:]
 		def attrs = item.getSupportedAttributes()
@@ -358,6 +403,26 @@ def getPiston(swid, item=null) {
     return resp
 }
 
+// make a generic thing getter to streamline the code
+def getThing(things, thingtype, swid, item=null) {
+    item = item ? item : things.find {it.id == swid }
+    def resp = item ? ["$thingtype": item.currentValue(thingtype)] : false
+    return resp
+}
+
+// make a generic thing list getter to streamline the code
+def getThings(things, thingtype) {
+    def resp = []
+    def n  = things ? things.size() : 0
+    log.debug "Number of things of type ${thingtype} = ${n}"
+    things?.each {
+        // def val = thingfunc(it.id, it)
+        def val = ["$thingtype": it.currentValue(thingtype)]
+        resp << [name: it.displayName, id: it.id, value: val, type: thingtype]
+    }
+    return resp
+}
+
 def getPistons() {
     def resp = []
     def plist = webCoRE_list()
@@ -371,14 +436,7 @@ def getPistons() {
 }
 
 def getSwitches() {
-    def resp = []
-    log.debug "Number of switches = " + myswitches?.size() ?: 0
-    subscribe(myswitches, "switch", switchHandler)
-    myswitches?.each {
-        def val = getSwitch(it.id, it)
-        resp << [name: it.displayName, id: it.id, value: val, type: "switch"]
-    }
-    return resp
+    getThings(myswitches, "switch")
 }
 
 def getBulbs() {
@@ -388,6 +446,17 @@ def getBulbs() {
     mybulbs?.each {
         def val = getBulb(it.id, it)
         resp << [name: it.displayName, id: it.id, value: val, type: "bulb"]
+    }
+    return resp
+}
+
+def getLights() {
+    def resp = []
+    def n  = mylights ? mylights.size() : 0
+    log.debug "Number of lights = ${n}"
+    mybulbs?.each {
+        def val = getLight(it.id, it)
+        resp << [name: it.displayName, id: it.id, value: val, type: "light"]
     }
     return resp
 }
@@ -402,7 +471,6 @@ def getDimmers() {
     return resp
 }
 
-
 def getSensors() {
     def resp = []
     log.debug "Number of motion sensors = " + mysensors?.size() ?: 0
@@ -415,8 +483,8 @@ def getSensors() {
 
 def getContacts() {
     def resp = []
-    log.debug "Number of contact sensors = " + mydoors?.size() ?: 0
-    mydoors?.each {
+    log.debug "Number of contact sensors = " + mycontacts?.size() ?: 0
+    mycontacts?.each {
         def val = getContact(it.id, it)
         resp << [name: it.displayName, id: it.id, value: val, type: "contact"]
     }
@@ -466,23 +534,25 @@ def getThermostats() {
 }
 
 def getPresences() {
-    def resp = []
-    log.debug "Number of presence sensors = " + mypresences?.size() ?: 0
-    mypresences?.each {
-        def val = getPresence(it.id, it)
-        resp << [name: it.displayName, id: it.id, value: val, type: "presence"]
-    }
-    return resp
+    getThings(mypresences, "presence")
 }
-
 def getWaters() {
-    def resp = []
-    log.debug "Number of water sensors = ${mywaters ? mywaters.size() : 0}"
-    mywaters?.each {
-        def val = getWater(it.id, it)
-        resp << [name: it.displayName, id: it.id, value: val, type: "water"]
-    }
-    return resp
+    getThings(mywaters, "water")
+}
+def getValves() {
+    getThings(myvalves, "valve")
+}
+def getDoors() {
+    getThings(mydoors, "door")
+}
+def getIlluminances() {
+    getThings(myilluminances, "illuminance")
+}
+def getSmokes() {
+    getThings(mysmokes, "smoke")
+}
+def getTemperatures() {
+    getThings(mytemperatures, "temperature")
 }
 
 def getWeathers() {
@@ -518,7 +588,7 @@ def getGenerals(mygens, gentype) {
         def thatid = it.id;
         def inlist = ( myswitches?.find {it.id == thatid } ||
              mydimmers?.find {it.id == thatid } ||
-             mydoors?.find {it.id == thatid } ||
+             mycontacts?.find {it.id == thatid } ||
              mylocks?.find {it.id == thatid } ||
              mysensors?.find {it.id == thatid} ||
              mymusics?.find {it.id == thatid } ||
@@ -555,20 +625,26 @@ def getGenerals(mygens, gentype) {
 
 def autoType(swid) {
 	def swtype
-    if ( myswitches?.find {it.id == swid } ) { swtype= "switch" }
+    if ( mydimmers?.find {it.id == swid } ) { swtype= "switchlevel" }
     else if ( mymomentaries?.find {it.id == swid } ) { swtype= "momentary" }
-    else if ( mydimmers?.find {it.id == swid } ) { swtype= "switchlevel" }
+    else if ( mylights?.find {it.id == swid } ) { swtype= "light" }
     else if ( mybulbs?.find {it.id == swid } ) { swtype= "bulb" }
+    else if ( myswitches?.find {it.id == swid } ) { swtype= "switch" }
     else if ( mylocks?.find {it.id == swid } ) { swtype= "lock" }
     else if ( mymusics?.find {it.id == swid } ) { swtype= "music" }
     else if ( mythermostats?.find {it.id == swid} ) { swtype = "thermostat" }
     else if ( mypresences?.find {it.id == swid } ) { swtype= "presence" }
     else if ( myweathers?.find {it.id == swid } ) { swtype= "weather" }
     else if ( mysensors?.find {it.id == swid } ) { swtype= "motion" }
-    else if ( mydoors?.find {it.id == swid } ) { swtype= "contact" }
+    else if ( mydoors?.find {it.id == swid } ) { swtype= "door" }
+    else if ( mycontacts?.find {it.id == swid } ) { swtype= "contact" }
     else if ( mywaters?.find {it.id == swid } ) { swtype= "water" }
+    else if ( myilluminances?.find {it.id == swid } ) { swtype= "illuminance" }
+    else if ( mysmokes?.find {it.id == swid } ) { swtype= "smoke" }
+    else if ( mytemperatures?.find {it.id == swid } ) { swtype= "temperature" }
     else if ( myothers?.find {it.id == swid } ) { swtype= "other" }
     else { swtype = "mode" }
+    return swtype
 }
 
 def doAction() {
@@ -595,6 +671,10 @@ def doAction() {
       	 cmdresult = setBulb(swid, cmd, swattr)
          break
          
+      case "light" :
+      	 cmdresult = setLight(swid, cmd, swattr)
+         break
+         
       case "switchlevel" :
          cmdresult = setDimmer(swid, cmd, swattr)
          break
@@ -614,16 +694,30 @@ def doAction() {
       case "music" :
          cmdresult = setMusic(swid, cmd, swattr)
          break
+        
+      // note: this requires a special handler for motion to manually set it
+      case "motion" :
+        // log.debug "Manually setting motion sensor with id = $swid"
+    	cmdresult = setSensor(swid, cmd, swattr)
+        break
 
       case "mode" :
          cmdresult = setMode(swid, cmd, swattr)
+         break
+         
+      case "valve" :
+      	 cmdresult = setValve(swid, cmd, swattr)
+         break
+
+      case "door" :
+      	 cmdresult = setDoor(swid, cmd, swattr)
          break
 
       case "piston" :
          webCoRE_execute(swid)
          // set the result to piston information (could be false)
          cmdresult = getPiston(swid)
-         log.debug "Executed webCoRE piston: $cmdresult"
+         // log.debug "Executed webCoRE piston: $cmdresult"
          break;
       
     }
@@ -651,6 +745,10 @@ def doQuery() {
          
     case "bulb" :
       	cmdresult = getBulb(swid)
+        break
+         
+    case "light" :
+      	cmdresult = getLight(swid)
         break
          
     case "switchlevel" :
@@ -688,7 +786,22 @@ def doQuery() {
     case "water" :
         cmdresult = getWater(swid)
         break
-        
+         
+    case "valve" :
+      	cmdresult = getValve(swid)
+        break
+    case "door" :
+      	cmdresult = getDoor(swid)
+        break
+    case "illuminance" :
+      	cmdresult = getIlluminance(swid)
+        break
+    case "smoke" :
+      	cmdresult = getSmoke(swid)
+        break
+    case "temperature" :
+      	cmdresult = getTemperature(swid)
+        break
     case "weather" :
     	cmdresult = getWeather(swid)
         break
@@ -703,24 +816,62 @@ def doQuery() {
 
     }
    
-    log.debug "getTile: type = $swtype id = $swid cmdresult = $cmdresult"
+    // log.debug "getTile: type = $swtype id = $swid cmdresult = $cmdresult"
     return cmdresult
 }
 
 // changed these to just return values of entire tile
+def setOnOff(items, itemtype, swid, cmd, swattr) {
+    def newonoff = false
+    def item  = items.find {it.id == swid }
+    if (item) {
+        if (cmd=="on" || cmd=="off") {
+            newonoff = cmd
+        } else {
+            newonoff = item.currentValue(itemtype)=="off" ? "on" : "off"
+        }
+        newonoff=="on" ? item.on() : item.off()
+    }
+    return newonoff
+    
+}
+
 def setSwitch(swid, cmd, swattr) {
+    def onoff = setOnOff(myswitches, "switch", swid,cmd,swattr)
+    def resp = onoff ? [switch: onoff] : false
+    return resp
+}
+
+def setDoor(swid, cmd, swattr) {
+    def newonoff = false
+    def item  = mydoors.find {it.id == swid }
+    if (item) {
+        if (cmd=="open" || cmd=="close") {
+            newonoff = cmd
+        } else {
+            newonoff = (item.currentValue("door")=="closed" ||
+                        item.currentValue("door")=="closing" )  ? "opening" : "closing"
+        }
+        newonoff=="opening" ? item.open() : item.close()
+    }
+    return newonoff
+}
+
+// special function to set motion status
+def setSensor(swid, cmd, swattr) {
     def resp = false
     def newsw
-    def item  = myswitches.find {it.id == swid }
-
-    log.debug "switch cmd = $cmd swattr = $swattr"
-    
-    if (item) {
-        newsw = item.currentSwitch
-        newsw=="off" ? item.on() : item.off()
-        newsw = newsw=="off" ? "on" : "off"
-        resp = [switch: newsw]
-        // resp = [name: item.displayName, value: newsw, id: swid, type: swtype]
+    def item  = mysensors.find {it.id == swid }
+    // anything but active will set the motion to inactive
+    if (item && item.hasCommand("startmotion") && item.hasCommand("stopmotion") ) {
+        if (cmd=="active" || cmd=="move") {
+            item.startmotion()
+            newsw = "active"
+        } else {
+            item.stopmotion()
+            newsw = "inactive"
+        }
+        resp = [motion: newsw]
     }
     return resp
     
@@ -728,17 +879,16 @@ def setSwitch(swid, cmd, swattr) {
 
 // changed these to just return values of entire tile
 def setBulb(swid, cmd, swattr) {
-    def resp = false
-    def newsw = cmd
-    def item  = mybulbs.find {it.id == swid }
-    
-    if (item) {
-        if (newsw!="on" && newsw!="off") { newsw = item.currentBulb=="off" ? "on" : "off" }
-        newsw=="on" ? item.on() : item.off()
-        resp = [bulb: newsw]
-    }
+    def onoff = setOnOff(mybulbs, "bulb", swid,cmd,swattr)
+    def resp = onoff ? [bulb: onoff] : false
     return resp
-    
+}
+
+// changed these to just return values of entire tile
+def setLight(swid, cmd, swattr) {
+    def onoff = setOnOff(mylights, "light", swid,cmd,swattr)
+    def resp = onoff ? [light: onoff] : false
+    return resp
 }
 
 def setMode(swid, cmd, swattr) {
@@ -772,54 +922,67 @@ def setDimmer(swid, cmd, swattr) {
     def item  = mydimmers.find {it.id == swid }
     if (item) {
     
-         def newonoff = item.currentValue("switch")
-         def newsw = item.currentValue("level")   
+        def newonoff = item.currentValue("switch")
+        def newsw = item.currentValue("level")   
          
-         log.debug "switchlevel cmd = $cmd swattr = $swattr"
-         switch(swattr) {
+        // log.debug "switchlevel cmd = $cmd swattr = $swattr"
+        switch(swattr) {
          
-         case "level-up":
-              newsw = newsw.toInteger()
-              newsw = (newsw >= 95) ? 100 : newsw - (newsw % 5) + 5
-              item.setLevel(newsw)
-              newonoff = "on"
-              break
+        case "level-up":
+            newsw = newsw.toInteger()
+            newsw = (newsw >= 95) ? 100 : newsw - (newsw % 5) + 5
+            item.setLevel(newsw)
+            newonoff = "on"
+            break
               
-         case "level-dn":
-              newsw = newsw.toInteger()
-              def del = (newsw % 5) == 0 ? 5 : newsw % 5
-              newsw = (newsw <= 5) ? 5 : newsw - del
-              item.setLevel(newsw)
-              newonoff = "on"
-              break
+        case "level-dn":
+            newsw = newsw.toInteger()
+            def del = (newsw % 5) == 0 ? 5 : newsw % 5
+            newsw = (newsw <= 5) ? 5 : newsw - del
+            item.setLevel(newsw)
+            newonoff = "on"
+            break
               
-         case "level-val":
-              newonoff = newonoff=="off" ? "on" : "off"
-              newonoff=="on" ? item.on() : item.off()
-              break
+        case "level-val":
+            newonoff = newonoff=="off" ? "on" : "off"
+            newonoff=="on" ? item.on() : item.off()
+            break
               
-         case "switchlevel switch on":
-              newonoff = "off"
-              item.off()
-              break
+        case "switchlevel switch on":
+            newonoff = "off"
+            item.off()
+            break
               
-         case "switchlevel switch off":
-              newonoff = "on"
-              item.on()
-              break
+        case "switchlevel switch off":
+            newonoff = "on"
+            item.on()
+            break
               
-         default:
-         	if (cmd=="on" || cmd=="off") {
-                  newonoff = cmd
+        case "switch":
+            if (cmd=="on" || cmd=="off") {
+                newonoff = cmd
             } else {
-                  newonoff = newonoff=="off" ? "on" : "off"
+                newonoff = newonoff=="off" ? "on" : "off"
             }
             newonoff=="on" ? item.on() : item.off()
-			break               
+            break
+              
+        default:
+            if (cmd=="on" || cmd=="off") {
+                newonoff = cmd
+            } else {
+                newonoff = newonoff=="off" ? "on" : "off"
+            }
+            newonoff=="on" ? item.on() : item.off()
+            if ( swattr.isNumber() ) {
+                newsw = swattr.toInteger()
+                item.setLevel(newsw)
+            }
+            break               
               
         }
-        resp = [switch: newonoff,
-                level: newsw]   
+        
+        resp = [switch: newonoff, level: newsw]   
         // resp = [name: item.displayName, value: newsw, id: swid, type: swtype]
     }
 
@@ -844,13 +1007,13 @@ def setMomentary(swid, cmd, swattr) {
 
 def setLock(swid, cmd, swattr) {
     def resp = false
-    def newsw = ""
-
+    def newsw
     def item  = mylocks.find {it.id == swid }
     if (item) {
-    
-          // log.debug "setLock command = $cmd for id = $swid"
-        if (item.currentLock=="locked") {
+        if (cmd!="lock" && cmd!="unlock") {
+            cmd = item.currentLock=="locked" ? "unlock" : "lock"
+        }
+        if (cmd=="unlock") {
             item.unlock()
             newsw = "unlocked"
         } else {
@@ -858,13 +1021,30 @@ def setLock(swid, cmd, swattr) {
             newsw = "locked"
         }
         resp = [lock: newsw]
-        // resp = [name: item.displayName, value: newsw, id: swid, type: swtype]
-
     }
     return resp
 
 }
 
+def setValve(swid, cmd, swattr) {
+    def resp = false
+    def newsw
+    def item  = myvalves.find {it.id == swid }
+    if (item) {
+        if (cmd!="open" && cmd!="close") {
+            cmd = item.currentValue=="closed" ? "open" : "close"
+        }
+        if (cmd=="open") {
+            item.open()
+            newsw = "open"
+        } else {
+            item.close()
+            newsw = "closed"
+        }
+        resp = [valve: newsw]
+    }
+    return resp
+}
 
 def setThermostat(swid, curtemp, swattr) {
     def resp = false
@@ -944,6 +1124,19 @@ def setThermostat(swid, curtemp, swattr) {
               newsw = "fanOn"
               resp['thermofan'] = newsw
               break
+           
+          // define actions for python end points  
+          default:
+              if ( item.hasCommand(cmd) ) {
+                  item.${cmd}()
+              }
+              if (cmd=="heat" && swattr.isNumber()) {
+                  item.setHeatingSetpoint(swattr)
+              }
+              if (cmd=="cool" && swattr.isNumber()) {
+                  item.setCoolingSetpoint(swattr)
+              }
+            break
           }
         // resp = [name: item.displayName, value: newsw, id: swid, type: swtype]
       
