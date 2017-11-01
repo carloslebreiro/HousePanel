@@ -16,11 +16,11 @@
  * but it has morphed into a full blown smart panel web application
  * it displays and enables interaction with switches, dimmers, locks, etc
  * 
- * Note: This is only the front end groovy application
- *       You will need to clone the repository hpanel-server from
+ * Note: This is only the back end groovy application
+ *       You will need to clone the front end web server
+ *       located in repository hpanel-server from
  *       github.com/kewashi/hpanel-server
- *       This is currently a private repository - access granted upon request
- *       by sending an email to: ken@kenw.com
+ *    
  * 
  */
 
