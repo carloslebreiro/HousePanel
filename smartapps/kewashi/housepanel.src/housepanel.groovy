@@ -20,10 +20,10 @@
 public static String version() { return "v1.0.alpha.rev.1" }
 public static String handle() { return "HousePanel" }
 definition(
-    name: "$(handle()}",
+    name: "${handle()}",
     namespace: "kewashi",
     author: "Kenneth Washington",
-    description: "Tap here to install $handle() $version() - a highly customizable tablet smart app. ",
+    description: "Tap here to install ${handle()} ${version()} - a highly customizable tablet smart app. ",
     category: "Convenience",
     iconUrl: "https://s3.amazonaws.com/smartapp-icons/Meta/intruder_motion-presence.png",
     iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Meta/intruder_motion-presence@2x.png",
