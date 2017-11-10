@@ -1,5 +1,5 @@
 /**
- *  House Panel
+ *  HousePanel
  *
  *  Copyright 2016 Kenneth Washington
  *
@@ -17,12 +17,14 @@
  * it displays and enables interaction with switches, dimmers, locks, etc
  * 
  */
+public static String version() { return "v1.0.alpha.rev.1" }
+public static String handle() { return "HousePanel" }
 definition(
-    name: "House Panel",
+    name: "$(handle()}",
     namespace: "kewashi",
     author: "Kenneth Washington",
-    description: "House Panel Groovy back end for enabling a highly customizable house panel smart web app. ",
-    category: "My Apps",
+    description: "Tap here to install $handle() $version() - a highly customizable tablet smart app. ",
+    category: "Convenience",
     iconUrl: "https://s3.amazonaws.com/smartapp-icons/Meta/intruder_motion-presence.png",
     iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Meta/intruder_motion-presence@2x.png",
     iconX3Url: "https://s3.amazonaws.com/smartapp-icons/Meta/intruder_motion-presence@2x.png",
