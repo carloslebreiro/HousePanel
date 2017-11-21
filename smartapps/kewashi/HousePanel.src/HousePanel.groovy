@@ -203,18 +203,22 @@ mappings {
 }
 
 def installed() {
-	log.debug "Installed with settings: ${settings}"
-    // activate connector for webCoRE
-    webCoRE_init()
+    initialize()
 }
 
 def updated() {
-	log.debug "Updated with settings: ${settings}"
+    initialize()
+}
+
+def initialize() {
+    log.debug "Installed with settings: ${settings}"
     webCoRE_init()
+    subscribe(myswitches, "switch", switchHandler)
+    subscribe(mydimmers, "switch", switchHandler)
 }
 
 def switchHandler(evt) {
-	def item = evt.getDevice()
+    def item = evt.getDevice()
     def evalue = evt.value
     def swid = item.id
     def swname = item.displayName
@@ -222,65 +226,49 @@ def switchHandler(evt) {
 }
 
 def getWeatherInfo(evt) {
-	def name = evt.getName()
+    def name = evt.getName()
     def src = evt.getSource()
     def val = evt.getValue()
-	log.debug "Weather event: from ${src} name = ${name} value = ${val}"
+    log.debug "Weather event: from ${src} name = ${name} value = ${val}"
 }
 
 def getSwitch(swid, item=null) {
-    getThing(myswitches, "switch", swid, item)
-    // item = item ? item : myswitches.find {it.id == swid }
-    // def resp = item ? [switch: item.currentValue("switch")] : false
-    // return resp
+    getThing(myswitches, swid, item)
 }
 
 def getBulb(swid, item=null) {
-    item = item ? item : mybulbs.find {it.id == swid }
-    def resp = item ? [bulb: item.currentValue("bulb")] : false
-    return resp
+    getThing(mybulbs, swid, item)
 }
 
 def getLight(swid, item=null) {
-    item = item ? item : mylights.find {it.id == swid }
-    def resp = item ? [light: item.currentValue("light")] : false
-    return resp
+    getThing(mylights, swid, item)
 }
 
 def getMomentary(swid, item=null) {
-	def resp = false
+    def resp = false
     item = item ? item : mymomentaries.find {it.id == swid }
     if ( item && item.hasCapability("Switch") ) {
-	    def curval = item.currentValue("switch")
-    	if (curval!="on" && curval!="off") { curval = "off" }
-    	resp = [momentary: item.currentValue("switch")]
+        def curval = item.currentValue("switch")
+        if (curval!="on" && curval!="off") { curval = "off" }
+        resp = [momentary: item.currentValue("switch")]
     }
     return resp
 }
 
 def getDimmer(swid, item=null) {
-    item = item ? item : mydimmers.find {it.id == swid }
-    def resp = item ? [switch: item.currentValue("switch"),
-                       level: item.currentValue("level")] : false
-    return resp
+    getThing(mydimmers, swid, item)
 }
 
 def getSensor(swid, item=null) {
-    item = item ? item : mysensors.find {it.id == swid }
-    def resp = item ? [motion: item.currentValue("motion")] : false
-    return resp
+    getThing(mysensors, swid, item)
 }
 
 def getContact(swid, item=null) {
-    item = item ? item : mycontacts.find {it.id == swid }
-    def resp = item ? [contact: item.currentValue("contact")] : false
-    return resp
+    getThing(mycontacts, swid, item)
 }
 
 def getLock(swid, item=null) {
-    item = item ? item : mylocks.find {it.id == swid }
-    def resp = item ? [lock: item.currentValue("lock")] : false
-    return resp
+    getThing(mylocks, swid, item)
 }
 
 def getMusic(swid, item=null) {
@@ -314,45 +302,34 @@ def getPresence(swid, item=null) {
 }
 
 def getWater(swid, item=null) {
-    item = item ? item : mywaters.find {it.id == swid }
-    def resp = item ? [water: item.currentValue("water")] : false
-    return resp
+    getThing(mywaters, swid, item)
 }
 
 def getValve(swid, item=null) {
-    item = item ? item : myvalves.find {it.id == swid }
-    def resp = item ? [valve: item.currentValue("valve")] : false
-    return resp
+    getThing(myvalves, swid, item)
 }
 def getDoor(swid, item=null) {
-    item = item ? item : mydoors.find {it.id == swid }
-    def resp = item ? [door: item.currentValue("door")] : false
-    return resp
+    getThing(mydoors, swid, item)
 }
 def getIlluminance(swid, item=null) {
-    item = item ? item : myilluminances.find {it.id == swid }
-    def resp = item ? [illuminance: item.currentValue("illuminance")] : false
-    return resp
+    getThing(myilluminances, swid, item)
 }
 def getSmoke(swid, item=null) {
-    item = item ? item : mysmokes.find {it.id == swid }
-    def resp = item ? [smoke: item.currentValue("smoke"),
-                       carbonMonoxide: item.currentValue("carbonMonoxide")] : false
-    return resp
+    getThing(mysmokes, swid, item)
 }
 def getTemperature(swid, item=null) {
-    getThing(mytemperatures, "temperature", swid, item)
+    getThing(mytemperatures, swid, item)
 }
 
 def getWeather(swid, item=null) {
     item = item ? item : myweathers.find {it.id == swid }
     def resp = false
     if (item) {
-		resp = [:]
-		def attrs = item.getSupportedAttributes()
-		attrs.each {att ->
-        	def attname = att.name
-        	def attval = item.currentValue(attname)
+	resp = [:]
+	def attrs = item.getSupportedAttributes()
+	attrs.each {att ->
+            def attname = att.name
+            def attval = item.currentValue(attname)
             resp.put(attname,attval)
     	}
     }
@@ -360,21 +337,7 @@ def getWeather(swid, item=null) {
 }
 
 def getOther(swid, item=null) {
-    item = item ? item : myothers.find {it.id == swid }
-    def resp = false
-    
-            item?.capabilities.each {cap ->
-                def capname = cap.getName()
-                resp = [:]
-                cap.attributes?.each {attr ->
-                    def othername = attr.getName()
-                    def othervalue = item.currentValue(othername)
-                    if ( othervalue ) { 
-                    	resp.put(othername,othervalue)
-                    }
-                }
-            }
-    return resp
+    getThing(myothers, swid, item)
 }
 
 def getMode(swid=0, item=null) {
@@ -406,9 +369,20 @@ def getPiston(swid, item=null) {
 }
 
 // make a generic thing getter to streamline the code
-def getThing(things, thingtype, swid, item=null) {
+def getThing(things, swid, item=null) {
     item = item ? item : things.find {it.id == swid }
-    def resp = item ? ["$thingtype": item.currentValue(thingtype)] : false
+    def resp = item ? [:] : false
+
+            item?.capabilities.each {cap ->
+                // def capname = cap.getName()
+                cap.attributes?.each {attr ->
+                    def othername = attr.getName()
+                    def othervalue = item.currentValue(othername)
+                    if ( othervalue ) { 
+                    	resp.put(othername,othervalue)
+                    }
+                }
+            }
     return resp
 }
 
@@ -419,7 +393,8 @@ def getThings(things, thingtype) {
     log.debug "Number of things of type ${thingtype} = ${n}"
     things?.each {
         // def val = thingfunc(it.id, it)
-        def val = ["$thingtype": it.currentValue(thingtype)]
+        // def val = ["$thingtype": it.currentValue(thingtype)]
+        def val = getThing(things, it.id, it)
         resp << [name: it.displayName, id: it.id, value: val, type: thingtype]
     }
     return resp
@@ -442,55 +417,23 @@ def getSwitches() {
 }
 
 def getBulbs() {
-    def resp = []
-    def n  = mybulbs ? mybulbs.size() : 0
-    log.debug "Number of bulbs = ${n}"
-    mybulbs?.each {
-        def val = getBulb(it.id, it)
-        resp << [name: it.displayName, id: it.id, value: val, type: "bulb"]
-    }
-    return resp
+    getThings(mybulbs, "bulb")
 }
 
 def getLights() {
-    def resp = []
-    def n  = mylights ? mylights.size() : 0
-    log.debug "Number of lights = ${n}"
-    mybulbs?.each {
-        def val = getLight(it.id, it)
-        resp << [name: it.displayName, id: it.id, value: val, type: "light"]
-    }
-    return resp
+    getThings(mylights, "light")
 }
 
 def getDimmers() {
-    log.debug "Number of dimmers = " + mydimmers?.size() ?: 0
-    def resp = []
-    mydimmers?.each {
-        def multivalue = getDimmer(it.id, it)
-        resp << [name: it.displayName, id: it.id, value: multivalue, type: "switchlevel"]
-    }
-    return resp
+    getThings(mydimmers, "switchlevel")
 }
 
 def getSensors() {
-    def resp = []
-    log.debug "Number of motion sensors = " + mysensors?.size() ?: 0
-    mysensors?.each {
-        def val = getSensor(it.id, it)
-        resp << [name: it.displayName, id: it.id, value: val, type: "motion"]
-    }
-    return resp
+    getThings(mysensors, "motion")
 }
 
 def getContacts() {
-    def resp = []
-    log.debug "Number of contact sensors = " + mycontacts?.size() ?: 0
-    mycontacts?.each {
-        def val = getContact(it.id, it)
-        resp << [name: it.displayName, id: it.id, value: val, type: "contact"]
-    }
-    return resp
+    getThings(mycontacts, "contact")
 }
 
 def getMomentaries() {
@@ -506,13 +449,7 @@ def getMomentaries() {
 }
 
 def getLocks() {
-    def resp = []
-    log.debug "Number of locks = " + mylocks?.size() ?: 0
-    mylocks?.each {
-        def val = getLock(it.id, it)
-        resp << [name: it.displayName, id: it.id, value: val, type: "lock" ]
-    }
-    return resp
+    getThings(mylocks, "lock")
 }
 
 def getMusics() {
@@ -536,7 +473,13 @@ def getThermostats() {
 }
 
 def getPresences() {
-    getThings(mypresences, "presence")
+    // getThings(mypresences, "presence")
+    def resp = []
+    mypresences?.each {
+        def multivalue = getPresence(it.id, it)
+        resp << [name: it.displayName, id: it.id, value: multivalue, type: "presence"]
+    }
+    return resp
 }
 def getWaters() {
     getThings(mywaters, "water")
@@ -558,34 +501,20 @@ def getTemperatures() {
 }
 
 def getWeathers() {
-	// def resp = getGenerals(myweathers, "weather")
     def resp = []
-    
     myweathers?.each {
-	    def multivalue = [:]
-    	def that = it
-    	def attrs = it.getSupportedAttributes()
-		attrs.each {att ->
-        	def attname = att.name
-        	def attval = that.currentValue(attname)
-            multivalue.put(attname,attval)
-            // log.debug "Supported ${that.displayName} Attribute: ${attname} value = ${attval}"
-        }
-        resp << [name: that.displayName, id: that.id, value: multivalue, type: "weather"]
+        def multivalue = getWeather(it.id, it)
+        resp << [name: it.displayName, id: it.id, value: multivalue, type: "weather"]
     }
     
     return resp
 }
 
 def getOthers() {
-	return getGenerals(myothers, "other")
-}
-
-def getGenerals(mygens, gentype) {
     def resp = []
     def uniquenum = 0
-    log.debug "Number of ${gentype} sensors = ${mygens ? mygens.size() : 0}"
-    mygens?.each {
+    log.debug "Number of other sensors = ${myothers ? myothers.size() : 0}"
+    myothers?.each {
         
         def thatid = it.id;
         def inlist = ( myswitches?.find {it.id == thatid } ||
@@ -594,33 +523,26 @@ def getGenerals(mygens, gentype) {
              mylocks?.find {it.id == thatid } ||
              mysensors?.find {it.id == thatid} ||
              mymusics?.find {it.id == thatid } ||
+             mymomentaries?.find {it.id == thatid } ||
              mythermostats?.find {it.id == thatid} ||
              myweathers?.find {it.id == thatid} ||
+             myweathers?.find {it.id == thatid } ||
+             mydoors?.find {it.id == thatid } ||
+             mywaters?.find {it.id == thatid } ||
+             myvalves?.find {it.id == thatid } ||
+             myilluminances?.find {it.id == thatid } ||
+             mysmokes?.find {it.id == thatid } ||
+             mytemperatures?.find {it.id == thatid } ||
              mypresences?.find {it.id == thatid}
             )
         
         if ( !inlist ) {
             uniquenum++
-
-            // log each capability supported with all its supported attributes
-            def that = it
-            def multivalue = [:]
-            it.capabilities.each {cap ->
-                def capname = cap.getName()
-                // log.debug "Capability name: ${capname}"
-                cap.attributes?.each {attr ->
-                    def othername = attr.getName()
-                    def othervalue = that.currentValue(othername)
-                    if ( othervalue ) { 
-                    	multivalue.put(othername,othervalue)
-                    	// log.debug "-- Attribute Name= ${othername} Value= ${othervalue}"
-                    }
-                }
-            }
-            resp << [name: it.displayName, id: it.id, value: multivalue, type: gentype]
+            def multivalue = getThing(myothers, thatid, it)
+            resp << [name: it.displayName, id: thatid, value: multivalue, type: "other"]
             // log.debug it.displayName + " = " + multivalue
         }
-        log.debug "Number of unique ${gentype} sensors = " + uniquenum
+        log.debug "Number of unique other sensors = " + uniquenum
     }
     return resp
 }
@@ -641,6 +563,7 @@ def autoType(swid) {
     else if ( mydoors?.find {it.id == swid } ) { swtype= "door" }
     else if ( mycontacts?.find {it.id == swid } ) { swtype= "contact" }
     else if ( mywaters?.find {it.id == swid } ) { swtype= "water" }
+    else if ( myvalves?.find {it.id == swid } ) { swtype= "valve" }
     else if ( myilluminances?.find {it.id == swid } ) { swtype= "illuminance" }
     else if ( mysmokes?.find {it.id == swid } ) { swtype= "smoke" }
     else if ( mytemperatures?.find {it.id == swid } ) { swtype= "temperature" }
@@ -845,18 +768,20 @@ def setSwitch(swid, cmd, swattr) {
 }
 
 def setDoor(swid, cmd, swattr) {
-    def newonoff = false
+    def newonoff
+    def resp = false
     def item  = mydoors.find {it.id == swid }
     if (item) {
         if (cmd=="open" || cmd=="close") {
             newonoff = cmd
         } else {
             newonoff = (item.currentValue("door")=="closed" ||
-                        item.currentValue("door")=="closing" )  ? "opening" : "closing"
+                        item.currentValue("door")=="closing" )  ? "open" : "close"
         }
-        newonoff=="opening" ? item.open() : item.close()
+        newonoff=="open" ? item.open() : item.close()
+        resp = [door: newonoff]
     }
-    return newonoff
+    return resp
 }
 
 // special function to set motion status
@@ -1282,3 +1207,4 @@ public  webCoRE_list(mode)
     return p
 }
 public  webCoRE_handler(evt){switch(evt.value){case 'pistonList':List p=state.webCoRE?.pistons?:[];Map d=evt.jsonData?:[:];if(d.id&&d.pistons&&(d.pistons instanceof List)){p.removeAll{it.iid==d.id};p+=d.pistons.collect{[iid:d.id]+it}.sort{it.name};state.webCoRE = [updated:now(),pistons:p];};break;case 'pistonExecuted':def cbk=state.webCoRE?.cbk;if(cbk&&evt.jsonData)"$cbk"(evt.jsonData);break;}}
+
