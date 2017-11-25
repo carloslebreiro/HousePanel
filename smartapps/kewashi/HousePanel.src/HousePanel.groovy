@@ -17,7 +17,7 @@
  * it displays and enables interaction with switches, dimmers, locks, etc
  * 
  */
-public static String version() { return "v1.0.alpha.rev.1" }
+public static String version() { return "v1.0.alpha.rev.2" }
 public static String handle() { return "HousePanel" }
 definition(
     name: "${handle()}",
@@ -25,9 +25,9 @@ definition(
     author: "Kenneth Washington",
     description: "Tap here to install ${handle()} ${version()} - a highly customizable tablet smart app. ",
     category: "Convenience",
-    iconUrl: "https://s3.amazonaws.com/smartapp-icons/Meta/intruder_motion-presence.png",
-    iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Meta/intruder_motion-presence@2x.png",
-    iconX3Url: "https://s3.amazonaws.com/smartapp-icons/Meta/intruder_motion-presence@2x.png",
+    iconUrl: "http://www.kenw.com/smartthings/icons/hpicon1x.png",
+    iconX2Url: "http://www.kenw.com/smartthings/icons/hpicon2x.png",
+    iconX3Url: "http://www.kenw.com/smartthings/icons/hpicon3x.png",
     oauth: [displayName: "kewashi house panel", displayLink: ""])
 
 
@@ -48,9 +48,6 @@ preferences {
     	input "mydoors", "capability.doorControl", hideWhenEmpty: true, multiple: true, required: false, title: "Doors"
     	input "mylocks", "capability.lock", hideWhenEmpty: true, multiple: true, required: false, title: "Locks"
     }
-    section ("Music players") {
-    	input "mymusics", "capability.musicPlayer", hideWhenEmpty: true, multiple: true, required: false, title: "Music Players"
-    }
     section ("Thermostat & Environment") {
     	input "mythermostats", "capability.thermostat", hideWhenEmpty: true, multiple: true, required: false, title: "Thermostats"
     	input "mytemperatures", "capability.temperatureMeasurement", hideWhenEmpty: true, multiple: true, required: false, title: "Temperature Measures"
@@ -59,105 +56,61 @@ preferences {
     }
     section ("Water") {
     	input "mywaters", "capability.waterSensor", hideWhenEmpty: true, multiple: true, required: false, title: "Water Sensors"
-    	input "mysmokes", "capability.smokeDetector", hideWhenEmpty: true, multiple: true, required: false, title: "Smoke Detectors"
     	input "myvalves", "capability.valve", hideWhenEmpty: true, multiple: true, required: false, title: "Sprinklers"
     }
-    section ("Other Sensors (duplicates ignored)...") {
-    	input "myothers", "capability.sensor", multiple: true, required: false
+    section ("Other Sensors (duplicates allowed)...") {
+    	input "mymusics", "capability.musicPlayer", hideWhenEmpty: true, multiple: true, required: false, title: "Music Players"
+    	input "mysmokes", "capability.smokeDetector", hideWhenEmpty: true, multiple: true, required: false, title: "Smoke Detectors"
+    	input "myothers", "capability.sensor", multiple: true, required: false, title: "Other and Virtual Sensors"
     }
 }
 
 mappings {
   path("/switches") {
-    action: [
-      POST: "getSwitches"
-    ]
+    action: [      POST: "getSwitches"    ]
   }
-  
   path("/bulbs") {
-    action: [
-      POST: "getBulbs"
-    ]
+    action: [      POST: "getBulbs"    ]
   }
-  
   path("/lights") {
-    action: [
-      POST: "getLights"
-    ]
+    action: [      POST: "getLights"    ]
   }
-  
   path("/dimmers") {
-    action: [
-      POST: "getDimmers"
-    ]
+    action: [      POST: "getDimmers"    ]
   }
-
   path("/sensors") {
-    action: [
-      POST: "getSensors"
-    ]
+    action: [      POST: "getSensors"    ]
   }
-    
   path("/contacts") {
-    action: [
-      POST: "getContacts"
-    ]
+    action: [      POST: "getContacts"    ]
   }
-
   path("/momentaries") {
-    action: [
-      POST: "getMomentaries"
-    ]
+    action: [      POST: "getMomentaries"    ]
   }
-    
   path("/locks") {
-    action: [
-      POST: "getLocks"
-    ]
+    action: [      POST: "getLocks"    ]
   }
-    
   path("/musics") {
-    action: [
-        POST: "getMusics"
-    ]
+    action: [        POST: "getMusics"    ]
   }
-    
   path("/thermostats") {
-    action: [
-      POST: "getThermostats"
-    ]
+    action: [      POST: "getThermostats"    ]
   }
-    
   path("/presences") {
-    action: [
-      POST: "getPresences"
-    ]
+    action: [      POST: "getPresences"    ]
   }
-  
   path("/valves") {
-    action: [
-      POST: "getValves"
-    ]
+    action: [      POST: "getValves"    ]
   }
-    
   path("/waters") {
-    action: [
-      POST: "getWaters"
-    ]
+    action: [      POST: "getWaters"    ]
   }
-    
   path("/others") {
-    action: [
-      POST: "getOthers"
-    ]
+    action: [      POST: "getOthers"    ]
   }
-    
   path("/weathers") {
-    action: [
-      POST: "getWeathers"
-    ]
+    action: [ POST: "getWeathers" ]
   }
-   
   path("/doors") {
     action: [ POST: "getDoors" ]
   }
@@ -171,33 +124,25 @@ mappings {
     action: [ POST: "getTemperatures" ]
   }
   path("/modes") {
-    action: [
-      POST: "getModes"
-    ]
+    action: [      POST: "getModes"    ]
   }
-    
   path("/pistons") {
-    action: [
-      POST: "getPistons"
-    ]
+    action: [      POST: "getPistons"    ]
+  }
+  path("/routines") {
+    action: [      POST: "getRoutines"    ]
   }
   
   path("/doaction") {
-     action: [
-       POST: "doAction"
-     ]
+     action: [       POST: "doAction"     ]
   }
   
   path("/doquery") {
-     action: [
-       POST: "doQuery"
-     ]
+     action: [       POST: "doQuery"     ]
   }
 
   path("/gethistory") {
-     action: [
-       POST: "getHistory"
-    ]
+     action: [       POST: "getHistory"    ]
   }
 
 }
@@ -207,22 +152,13 @@ def installed() {
 }
 
 def updated() {
+    unsubscribe()
     initialize()
 }
 
 def initialize() {
     log.debug "Installed with settings: ${settings}"
     webCoRE_init()
-    subscribe(myswitches, "switch", switchHandler)
-    subscribe(mydimmers, "switch", switchHandler)
-}
-
-def switchHandler(evt) {
-    def item = evt.getDevice()
-    def evalue = evt.value
-    def swid = item.id
-    def swname = item.displayName
-    log.debug "Event received from device = ${swname} value = ${evalue} id = ${swid}"
 }
 
 def getWeatherInfo(evt) {
@@ -322,49 +258,51 @@ def getTemperature(swid, item=null) {
 }
 
 def getWeather(swid, item=null) {
-    item = item ? item : myweathers.find {it.id == swid }
-    def resp = false
-    if (item) {
-	resp = [:]
-	def attrs = item.getSupportedAttributes()
-	attrs.each {att ->
-            def attname = att.name
-            def attval = item.currentValue(attname)
-            resp.put(attname,attval)
-    	}
-    }
-    return resp
+	getDevice(myweathers, swid, item)
 }
 
 def getOther(swid, item=null) {
     getThing(myothers, swid, item)
 }
 
-def getMode(swid=0, item=null) {
+def getmyMode(swid, item=null) {
     def resp = [:]
-    resp =  [   name: location.getName(),
-                zipcode: location.getZipCode(),
-                themode: location.getMode()
-            ];
+    def curmode = location.getCurrentMode()
+    def curmodename = curmode.getName()
+    resp =  [ name: location.getName(),
+              themode: curmodename ];
+    log.debug "currrent mode = ${curmodename}"
     return resp
 }
 
-// this returns just a single active mode, not the list of available modes
-// this is done so we can treat this like any other set of tiles
-def getModes() {
-    def resp = []
-    // log.debug "Getting the mode tile"
-    def val = getMode()
-    resp << [name: "Mode 1x1", id: "mode1x1", value: val, type: "mode"]
-    resp << [name: "Mode 1x2", id: "mode1x2", value: val, type: "mode"]
-    resp << [name: "Mode 2x1", id: "mode2x1", value: val, type: "mode"]
-    resp << [name: "Mode 2x2", id: "mode2x2", value: val, type: "mode"]
+def getRoutine(swid, item=null) {
+	def routines = location.helloHome?.getPhrases()
+    def routine = item ? item : routines.find{it.id == swid}
+    def resp = [label: routine.label]
     return resp
 }
 
 def getPiston(swid, item=null) {
     item = item ? item : webCoRE_list().find {it.id == swid}
-    def resp = [webcore: "webCoRE piston", pistonName: item.name]
+    def resp = [webcore: "webCoRE", pistonName: item.name]
+    return resp
+}
+
+// a generic device getter to streamline code
+def getDevice(mydevices, swid, item=null) {
+    def resp = false
+    if ( mydevices ) {
+    	item = item ? item : mydevices.find {it.id == swid }
+    	if (item) {
+			resp = [:]
+			def attrs = item.getSupportedAttributes()
+			attrs.each {att ->
+	            def attname = att.name
+    	        def attval = item.currentValue(attname)
+        	    resp.put(attname,attval)
+    		}
+    	}
+    }
     return resp
 }
 
@@ -397,6 +335,19 @@ def getThings(things, thingtype) {
         def val = getThing(things, it.id, it)
         resp << [name: it.displayName, id: it.id, value: val, type: thingtype]
     }
+    return resp
+}
+
+// this returns just a single active mode, not the list of available modes
+// this is done so we can treat this like any other set of tiles
+def getModes() {
+    def resp = []
+    // log.debug "Getting the mode tile"
+    def val = getmyMode(0)
+    resp << [name: "Mode1x1", id: "mode1x1", value: val, type: "mode"]
+    resp << [name: "Mode1x2", id: "mode1x2", value: val, type: "mode"]
+    resp << [name: "Mode2x1", id: "mode2x1", value: val, type: "mode"]
+    resp << [name: "Mode2x2", id: "mode2x2", value: val, type: "mode"]
     return resp
 }
 
@@ -506,14 +457,25 @@ def getWeathers() {
         def multivalue = getWeather(it.id, it)
         resp << [name: it.displayName, id: it.id, value: multivalue, type: "weather"]
     }
-    
+    return resp
+}
+
+// get hellohome routines - thanks to ady264 for the tip
+def getRoutines() {
+    def resp = []
+	def routines = location.helloHome?.getPhrases()
+    log.debug "Number of routines = " + routines?.size() ?: 0
+    routines?.each {
+        def multivalue = getRoutine(it.id, it)
+        resp << [name: it.label, id: it.id, value: multivalue, type: "routine"]
+    }
     return resp
 }
 
 def getOthers() {
     def resp = []
     def uniquenum = 0
-    log.debug "Number of other sensors = ${myothers ? myothers.size() : 0}"
+    log.debug "Number of selected other sensors = ${myothers ? myothers.size() : 0}"
     myothers?.each {
         
         def thatid = it.id;
@@ -542,8 +504,8 @@ def getOthers() {
             resp << [name: it.displayName, id: thatid, value: multivalue, type: "other"]
             // log.debug it.displayName + " = " + multivalue
         }
-        log.debug "Number of unique other sensors = " + uniquenum
     }
+    log.debug "Number of unique other sensors = " + uniquenum
     return resp
 }
 
@@ -572,6 +534,7 @@ def autoType(swid) {
     return swtype
 }
 
+// routine that performs ajax action for clickable tiles
 def doAction() {
     // returns false if the item is not found
     // otherwise returns a JSON object with the name, value, id, type
@@ -619,7 +582,7 @@ def doAction() {
       case "music" :
          cmdresult = setMusic(swid, cmd, swattr)
          break
-        
+         
       // note: this requires a special handler for motion to manually set it
       case "motion" :
         // log.debug "Manually setting motion sensor with id = $swid"
@@ -645,9 +608,13 @@ def doAction() {
          // log.debug "Executed webCoRE piston: $cmdresult"
          break;
       
+      case "routine" :
+        cmdresult = setRoutine(swid, cmd, swattr)
+        break;
+        
     }
    
-    // log.debug "cmd = $cmd type = $swtype id = $swid cmdresult = $cmdresult"
+    log.debug "cmd = $cmd type = $swtype id = $swid cmdresult = $cmdresult"
     return cmdresult
 
 }
@@ -730,13 +697,14 @@ def doQuery() {
     case "weather" :
     	cmdresult = getWeather(swid)
         break
-        
     case "other" :
     	cmdresult = getOther(swid)
         break
-
     case "mode" :
-        cmdresult = getMode(swid)
+        cmdresult = getmyMode(swid)
+        break
+    case "routine" :
+        cmdresult = getRoutine(swid)
         break
 
     }
@@ -823,20 +791,19 @@ def setMode(swid, cmd, swattr) {
     def themode = swattr.substring(swattr.lastIndexOf(" ")+1)
     def newsw = themode
     def allmodes = location.getModes()
-    def idx=allmodes.findIndexOf{it == themode}
+    def idx=allmodes.findIndexOf{it.name == themode}
 
     if (idx!=null) {
         idx = idx+1
         if (idx == allmodes.size() ) { idx = 0 }
-        newsw = allmodes[idx]
+        newsw = allmodes[idx].getName()
     } else {
-        newsw = allmodes[0]
+        newsw = allmodes[0].getName()
     }
     
     log.debug "Mode changed from $themode to $newsw index = $idx "
     location.setMode(newsw);
     resp =  [   name: location.getName(),
-                zipcode: location.getZipCode(),
                 themode: newsw
             ];
     
@@ -979,7 +946,6 @@ def setThermostat(swid, curtemp, swattr) {
     def tempint
 
     def item  = mythermostats.find {it.id == swid }
-//    mythermostats?.each {
     if (item) {
           log.debug "setThermostat attr = $swattr for id = $swid curtemp = $curtemp"
           resp = getThermostat(swid, item)
@@ -1154,6 +1120,14 @@ def setMusic(swid, cmd, swattr) {
     return resp
 }
 
+def setRoutine(swid, cmd, swattr) {
+    def routine = location.helloHome?.getPhrases().find{ it.id == swid }
+    if (routine) {
+        location.helloHome?.execute(routine.label)
+    }
+    return routine
+}
+
 /*************************************************************************/
 /* webCoRE Connector v0.2                                                */
 /*************************************************************************/
@@ -1207,4 +1181,3 @@ public  webCoRE_list(mode)
     return p
 }
 public  webCoRE_handler(evt){switch(evt.value){case 'pistonList':List p=state.webCoRE?.pistons?:[];Map d=evt.jsonData?:[:];if(d.id&&d.pistons&&(d.pistons instanceof List)){p.removeAll{it.iid==d.id};p+=d.pistons.collect{[iid:d.id]+it}.sort{it.name};state.webCoRE = [updated:now(),pistons:p];};break;case 'pistonExecuted':def cbk=state.webCoRE?.cbk;if(cbk&&evt.jsonData)"$cbk"(evt.jsonData);break;}}
-
