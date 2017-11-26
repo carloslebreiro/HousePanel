@@ -316,9 +316,7 @@ def getThing(things, swid, item=null) {
                 cap.attributes?.each {attr ->
                     def othername = attr.getName()
                     def othervalue = item.currentValue(othername)
-                    if ( othervalue ) { 
-                    	resp.put(othername,othervalue)
-                    }
+                    resp.put(othername,othervalue)
                 }
             }
     return resp
